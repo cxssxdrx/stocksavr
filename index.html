@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="StockSavr — Find Smarter. Stock Better. Waste Less.">
+<title>StockSavr Store Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: white app shell — light rail on the left, four views (Overview, Searches vs sales, Stock actions, Forecast). Green is an accent only. Single light theme by choice. */
+:root{
+  --bg:#f2f5f3; --surface:#ffffff; --soft:#f4f7f5; --head:#eef3f0; --line:#e1e7e3; --line2:#cfd7d3; --ink:#15211c; --muted:#56655e; --faint:#8b9892;
+  --shadow:0 1px 2px rgba(21,33,28,.05),0 2px 8px rgba(21,33,28,.04);
+  --violet:#6b5bd2; --violet-soft:#efedfb;
+  --accent:#11885c; --accent-soft:#e8f5ee; --search:#3a6ed6; --search-soft:#ebf1fc;
+  --good:#1f8a4c; --good-soft:#e7f5ec; --warn:#b86e05; --warn-soft:#fdf3e1; --crit:#c8382d; --crit-soft:#fcebe9;
+  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --body:"Figtree","Segoe UI",system-ui,-apple-system,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.45}
+.app{display:grid;grid-template-columns:228px minmax(0,1fr);min-height:100vh}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Rail */
+.rail{background:var(--surface);border-right:1px solid var(--line);padding:22px 14px;display:flex;flex-direction:column;gap:26px;position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:10px;padding:0 8px}
+.brand b{font-family:var(--display);font-size:21px;font-weight:700;letter-spacing:-.01em}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav a{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:9px;color:var(--muted);text-decoration:none;font-weight:500;position:relative}
+.nav a:hover{background:var(--soft);color:var(--ink)}
+.nav a[aria-current="page"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.nav svg{width:18px;height:18px;flex:none}
+.nav .count{margin-left:auto;font-size:11px;font-weight:700;background:var(--crit);color:#fff;border-radius:999px;padding:1px 7px}
+.rail .foot{margin-top:auto;padding:12px;border:1px solid var(--line);border-radius:12px;font-size:12.5px;color:var(--muted)}
+.rail .foot strong{display:block;color:var(--ink);font-weight:600;margin-bottom:2px}
+
+/* Main */
+main{padding-block:22px 48px;padding-inline:28px;min-width:0}
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:18px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;padding:6px 13px;font-weight:500;background:var(--surface)}
+.chip .dot{width:7px;height:7px;border-radius:50%;background:var(--good)}
+.chip.demo{color:var(--muted);font-size:12.5px}
+.view{display:flex;flex-direction:column;gap:18px}
+.vh h1{font-family:var(--display);font-weight:700;font-size:clamp(23px,2.6vw,30px);letter-spacing:-.02em;margin:0 0 4px;text-wrap:balance}
+.vh p{margin:0;color:var(--muted);max-width:68ch}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;font-weight:600;font-size:12.5px;margin-top:12px}
+.flow span{padding:5px 11px;border-radius:7px;border:1px solid var(--line);background:var(--surface)}
+.flow .s{color:var(--search);background:var(--search-soft);border-color:transparent}
+.flow .p{color:var(--accent);background:var(--accent-soft);border-color:transparent}
+.flow i{color:var(--faint);font-style:normal}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.kpi{--k:var(--search);--ks:var(--search-soft);background:var(--surface);box-shadow:var(--shadow);border:1px solid var(--line);border-top:3px solid var(--k);border-radius:12px;padding:13px 16px 14px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.kpi:nth-child(2){--k:var(--accent);--ks:var(--accent-soft)}
+.kpi:nth-child(3){--k:var(--violet);--ks:var(--violet-soft)}
+.kpi:nth-child(4){--k:var(--warn);--ks:var(--warn-soft)}
+.kpi .lbl{color:var(--muted);font-weight:600;font-size:12.5px;display:flex;align-items:center;gap:8px}
+.kpi .lbl::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--k);flex:none}
+.kpi .val{font-family:var(--display);font-size:26px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.kpi .sub{font-size:12px;color:var(--muted)}
+.up{color:var(--good);font-weight:600}.down{color:var(--crit);font-weight:600}
+
+/* Panels */
+.grid2{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px}
+.grid2.even{grid-template-columns:repeat(2,minmax(0,1fr))}
+.panel{border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0;background:var(--surface);box-shadow:var(--shadow)}
+.ph{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:10px;margin:-16px -18px 14px;padding:13px 18px 12px;border-bottom:1px solid var(--line);background:var(--soft);border-radius:12px 12px 0 0}
+.panel > div > .ph{margin:0 0 12px;padding:0;border:0;background:none;border-radius:0}
+.ph h2{font-family:var(--display);font-weight:500;font-size:17px;margin:0;letter-spacing:-.01em}
+.ph p{margin:2px 0 0;color:var(--muted);font-size:12.5px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.link{background:none;border:0;color:var(--accent);font-weight:600;font-size:12.5px;cursor:pointer;padding:0}
+
+/* Pills */
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.pill.crit{background:var(--crit-soft);color:var(--crit)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.info{background:var(--search-soft);color:var(--search)}
+.pill.mute{background:var(--soft);color:var(--muted)}
+
+/* Searched vs bought bars */
+.sb{display:flex;flex-direction:column;gap:12px}
+.sbr{display:grid;grid-template-columns:150px minmax(0,1fr) 96px;align-items:center;gap:14px}
+.sbr .name{font-weight:600;min-width:0}
+.sbr .name small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.bars{display:flex;flex-direction:column;gap:4px;min-width:0}
+.bar{height:8px;border-radius:4px}
+.bar.s{background:var(--search)}.bar.p{background:var(--accent)}
+.conv{text-align:right;font-variant-numeric:tabular-nums;display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.conv b{font-size:15px}
+
+/* Toolbar */
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.toolbar input,.toolbar select{border:1px solid var(--line2);border-radius:8px;padding:7px 11px;background:var(--surface);min-width:0}
+.toolbar input{width:220px;max-width:100%}
+.seg{display:inline-flex;border:1px solid var(--line2);border-radius:8px;overflow:hidden}
+.seg button{background:var(--surface);border:0;padding:7px 12px;cursor:pointer;font-weight:500;color:var(--muted);border-right:1px solid var(--line2)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+
+/* Tables */
+.tw{overflow-x:auto;margin-inline:-4px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;min-width:720px}
+th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:11.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;background:var(--head);border-bottom:1px solid var(--line2)}
+th:first-child{border-radius:8px 0 0 8px}th:last-child{border-radius:0 8px 8px 0}
+tbody tr:nth-child(even){background:#fafcfb}
+td b{color:var(--ink)}
+th.num,td.num{text-align:right}
+th button{background:none;border:0;padding:0;cursor:pointer;font:inherit;color:inherit;text-transform:inherit;letter-spacing:inherit}
+th button[data-dir]::after{content:" ↓"}th button[data-dir="asc"]::after{content:" ↑"}
+tbody tr:hover{background:var(--accent-soft)}
+td .sub{display:block;color:var(--muted);font-size:12px}
+.mini{display:inline-block;width:70px;height:6px;border-radius:3px;background:var(--soft);vertical-align:middle;margin-left:8px;overflow:hidden}
+.mini i{display:block;height:100%;background:var(--accent)}
+.empty{color:var(--muted);padding:18px 8px}
+
+/* Action cards */
+.acts{display:flex;flex-direction:column;gap:10px}
+.act{display:grid;grid-template-columns:4px minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 14px 12px 0;border:1px solid var(--line);border-radius:11px;overflow:hidden;background:var(--surface)}
+.act.crit{background:linear-gradient(90deg,var(--crit-soft),var(--surface) 55%)}
+.act.good{background:linear-gradient(90deg,var(--good-soft),var(--surface) 55%)}
+.act.warn{background:linear-gradient(90deg,var(--warn-soft),var(--surface) 55%)}
+.act .stripe{align-self:stretch}
+.act.crit .stripe{background:var(--crit)}.act.good .stripe{background:var(--good)}.act.warn .stripe{background:var(--warn)}
+.act .k{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+.act.crit .k{color:var(--crit)}.act.good .k{color:var(--good)}.act.warn .k{color:var(--warn)}
+.act h3{margin:2px 0 3px;font-size:14.5px;font-weight:600}
+.act p{margin:0;color:var(--muted);font-size:12.5px}
+.act .impact{margin-top:7px;display:flex;flex-wrap:wrap;gap:6px}
+.act .impact span{font-size:12px;font-weight:600;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:2px 8px;font-variant-numeric:tabular-nums}
+.act .btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.btn{border:1px solid var(--line2);background:var(--surface);border-radius:8px;padding:7px 13px;font-weight:600;font-size:12.5px;cursor:pointer}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.primary:hover{background:#000}
+.act.done{opacity:.6}
+.act.done .btn.primary{background:var(--good);border-color:var(--good)}
+.summary{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:13px;color:var(--muted)}
+.summary b{color:var(--ink);font-variant-numeric:tabular-nums}
+
+/* Charts */
+.chartwrap{overflow-x:auto}
+svg.chart{display:block;width:100%;height:auto}
+.chart text{fill:var(--muted);font-family:var(--body);font-size:11px}
+.chart .gl{stroke:var(--line);stroke-width:1}
+.chart .band{fill:var(--accent-soft)}
+.chart .pred{fill:none;stroke:var(--accent);stroke-width:2.4}
+.chart .actl{fill:none;stroke:var(--search);stroke-width:2.4}
+.chart .fut{fill:none;stroke:var(--accent);stroke-width:2.4;stroke-dasharray:6 5}
+.chart .today{stroke:var(--ink);stroke-width:1;stroke-dasharray:3 3;opacity:.4}
+.chart .todayt{fill:var(--ink);font-weight:600}
+.chart .futbg{fill:var(--soft)}
+.chart .pp{fill:var(--surface);stroke:var(--accent);stroke-width:2}
+.chart .pa{fill:var(--surface);stroke:var(--search);stroke-width:2}
+.hours{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:6px;align-items:end;height:150px}
+.hours div{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;height:100%;min-width:0}
+.hours span.b{width:100%;background:var(--search-soft);border-radius:5px 5px 2px 2px}
+.hours span.b.pk{background:var(--search)}
+.hours small{font-size:10.5px;color:var(--muted)}
+.list{display:flex;flex-direction:column}
+.li{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:10px 8px;border-bottom:1px solid var(--line)}
+.li:nth-child(odd){background:var(--soft);border-radius:6px}
+.li:last-child{border-bottom:0}
+.li b{font-weight:600}
+.li .n{font-variant-numeric:tabular-nums;color:var(--muted)}
+.drivers{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
+.drivers li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start}
+.drivers p{margin:0}.drivers small{color:var(--muted)}
+.acc{display:flex;flex-direction:column;gap:10px}
+.acc div{display:grid;grid-template-columns:110px minmax(0,1fr) 46px;gap:10px;align-items:center;font-variant-numeric:tabular-nums}
+.acc .tr{height:7px;background:var(--soft);border-radius:4px;overflow:hidden}
+.acc .tr i{display:block;height:100%;background:var(--accent)}
+.acc span:last-child{text-align:right;font-weight:600}
+.fstats{display:flex;flex-wrap:wrap;gap:6px 26px;margin-top:10px;font-size:12.5px;color:var(--muted)}
+.fstats b{color:var(--ink);font-variant-numeric:tabular-nums}
+
+@media (max-width:1150px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid2,.grid2.even{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:780px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .rail{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;height:auto;flex-direction:column;gap:10px;padding:12px 16px;border-right:0;border-bottom:1px solid var(--line);box-shadow:var(--shadow)}
+  .nav{flex-direction:row;overflow-x:auto}
+  .nav a{white-space:nowrap;padding:7px 10px}
+  .rail .foot{display:none}
+  main{padding-inline:16px}
+  .sbr{grid-template-columns:minmax(0,1fr) 96px}
+  .sbr .bars{grid-column:1 / -1;order:3}
+  .act{grid-template-columns:4px minmax(0,1fr)}
+  .act .btns{grid-column:2;justify-content:flex-start}
+  .hours small{font-size:9px}
+}
+@media (max-width:440px){.kpis{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="rail">
+    <div class="brand">
+      <svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true"><path d="M6 24C6 12 14 6 26 6c0 12-6 20-18 20" fill="none" stroke="#11885c" stroke-width="2.6" stroke-linecap="round"/><path d="M8 26 19 14" stroke="#11885c" stroke-width="2.6" stroke-linecap="round"/></svg>
+      <b>StockSavr</b>
+    </div>
+    <nav class="nav" aria-label="Main">
+      <a href="#overview" data-v="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Overview</a>
+      <a href="#searches" data-v="searches"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.5-4.5"/></svg>Searches vs sales</a>
+      <a href="#actions" data-v="actions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7"/></svg>Stock actions<span class="count" id="navCount"></span></a>
+      <a href="#forecast" data-v="forecast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Forecast</a>
+    </nav>
+    <div class="foot"><strong>Find Smarter. Stock Better. Waste Less.</strong>Kiosk data synced at 06:00 today.</div>
+  </aside>
+
+  <main>
+    <div class="top">
+      <div class="chips">
+        <span class="chip"><span class="dot"></span>Greenfield Market · Finchley Road</span>
+        <span class="chip">Mon 12 Oct 2026 · data to Sun 11 Oct</span>
+      </div>
+      <span class="chip demo">Demo data</span>
+    </div>
+
+    <!-- OVERVIEW -->
+    <section class="view" id="v-overview">
+      <div class="vh">
+        <h1>Good morning. Here is your store this week.</h1>
+        <p>Kiosk searches show what shoppers want. StockSavr compares them with what they actually buy and with shelf life, then tells you what to order.</p>
+        <div class="flow" aria-label="How StockSavr works"><span class="s">Kiosk search</span><i>→</i><span class="p">Purchase</span><i>→</i><span>Demand forecast</span><i>→</i><span>Less food waste</span></div>
+      </div>
+      <div class="kpis">
+        <div class="kpi"><span class="lbl">Kiosk searches · 7 days</span><span class="val">96,800</span><span class="sub"><span class="up">↑ 14%</span> vs previous week</span></div>
+        <div class="kpi"><span class="lbl">Search → purchase</span><span class="val" id="kConv"></span><span class="sub">of searched items were bought</span></div>
+        <div class="kpi"><span class="lbl">Forecast accuracy</span><span class="val" id="kAcc"></span><span class="sub">fresh products, last 7 days</span></div>
+        <div class="kpi"><span class="lbl">Food waste avoided · 7 days</span><span class="val" id="kWaste"></span><span class="sub" id="kWasteSub"></span></div>
+      </div>
+      <div class="grid2">
+        <div class="panel">
+          <div class="ph"><div><h2>Searched vs bought</h2><p>Top 5 searched products this week.</p></div>
+            <div class="legend"><span><i style="background:var(--search)"></i>Searches</span><span><i style="background:var(--accent)"></i>Purchases</span></div></div>
+          <div class="sb" id="ovSb"></div>
+          <div style="margin-top:14px"><a class="link" href="#searches">See all searches →</a></div>
+        </div>
+        <div class="panel">
+          <div class="ph"><div><h2>To do today</h2><p>Most urgent stock actions.</p></div><a class="link" href="#actions">All actions →</a></div>
+          <div class="acts" id="ovActs"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="ph"><div><h2>Forecast vs actual sales</h2><p>All fresh products, units per day.</p></div>
+          <div class="legend"><span><i style="background:var(--accent)"></i>Forecast</span><span><i style="background:var(--search)"></i>Actual sales</span></div></div>
+        <div class="chartwrap"><svg class="chart" id="ovChart" viewBox="0 0 760 250" role="img" aria-label="Forecast and actual daily sales of fresh products"></svg></div>
+      </div>
+    </section>
+
+    <!-- SEARCHES VS SALES -->
+    <section class="view" id="v-searches" hidden>
+      <div class="vh"><h1>Searches vs sales</h1><p>What shoppers looked for on the kiosk, compared with what left the store in a basket. Low conversion means demand you are not serving.</p></div>
+      <div class="kpis">
+        <div class="kpi"><span class="lbl">Kiosk searches</span><span class="val">96,800</span><span class="sub">13,830 per day on average</span></div>
+        <div class="kpi"><span class="lbl">Products searched</span><span class="val">1,412</span><span class="sub">out of 6,200 in range</span></div>
+        <div class="kpi"><span class="lbl">Search → purchase</span><span class="val" id="sConv"></span><span class="sub">top tracked products</span></div>
+        <div class="kpi"><span class="lbl">Searches with no result</span><span class="val">4,380</span><span class="sub"><span class="down">4.5%</span> of searches · product not stocked</span></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><div><h2>Product demand signals</h2><p>Click a column to sort.</p></div>
+          <div class="toolbar">
+            <input id="q" type="search" placeholder="Filter products" aria-label="Filter products">
+            <select id="cat" aria-label="Category"></select>
+            <div class="seg" role="group" aria-label="Signal filter">
+              <button type="button" data-sig="all" aria-pressed="true">All</button>
+              <button type="button" data-sig="gap" aria-pressed="false">Unmet demand</button>
+            </div>
+          </div></div>
+        <div class="tw"><table id="sTable">
+          <thead><tr>
+            <th><button data-k="n">Product</button></th>
+            <th class="num"><button data-k="s" data-dir="desc">Searches</button></th>
+            <th class="num"><button data-k="b">Purchases</button></th>
+            <th class="num"><button data-k="conv">Conversion</button></th>
+            <th class="num"><button data-k="tr">Searches vs last wk</button></th>
+            <th><button data-k="cover">Stock</button></th>
+            <th>Signal</th>
+          </tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="grid2 even">
+        <div class="panel">
+          <div class="ph"><div><h2>Searched, not stocked</h2><p>Range opportunities: shoppers asked, the store has nothing to show.</p></div></div>
+          <div class="list" id="noRes"></div>
+        </div>
+        <div class="panel">
+          <div class="ph"><div><h2>When shoppers search</h2><p>Average kiosk searches per hour, last 7 days.</p></div></div>
+          <div class="hours" id="hours"></div>
+          <p class="fstats">Peak <b>18:00–19:00</b> · plan shelf refills for <b>16:30</b></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- STOCK ACTIONS -->
+    <section class="view" id="v-actions" hidden>
+      <div class="vh"><h1>Stock actions</h1><p>Calculated from the 7-day forecast, current stock and remaining shelf life. Apply an action to send it to tomorrow's order and to the shop-floor team.</p></div>
+      <div class="kpis">
+        <div class="kpi"><span class="lbl">Open actions</span><span class="val" id="aOpen"></span><span class="sub" id="aOpenSub"></span></div>
+        <div class="kpi"><span class="lbl">Waste at risk</span><span class="val" id="aRisk"></span><span class="sub">if nothing changes this week</span></div>
+        <div class="kpi"><span class="lbl">Waste avoided by applied actions</span><span class="val" id="aSaved"></span><span class="sub" id="aSavedSub"></span></div>
+        <div class="kpi"><span class="lbl">Sales at risk from empty shelves</span><span class="val" id="aLost"></span><span class="sub">per week, restock items</span></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><div><h2>Recommended actions</h2><p>Sorted by urgency.</p></div>
+          <div class="seg" role="group" aria-label="Action type">
+            <button type="button" data-t="all" aria-pressed="true">All</button>
+            <button type="button" data-t="markdown" aria-pressed="false">Mark down</button>
+            <button type="button" data-t="reduce" aria-pressed="false">Reduce order</button>
+            <button type="button" data-t="restock" aria-pressed="false">Restock</button>
+          </div></div>
+        <div class="acts" id="allActs"></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><div><h2>Shelf-life watchlist</h2><p>Fresh products whose stock expires within 4 days.</p></div></div>
+        <div class="tw"><table id="wTable"><thead><tr>
+          <th>Product</th><th class="num">In stock</th><th class="num">Expires in</th><th class="num">Will sell before expiry</th><th class="num">Left over</th><th>Status</th>
+        </tr></thead><tbody></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- FORECAST -->
+    <section class="view" id="v-forecast" hidden>
+      <div class="vh"><h1>Demand forecast</h1><p>Sales history, kiosk search trends and local events, combined into a 7-day forecast per category and product.</p></div>
+      <div class="panel">
+        <div class="ph"><div><h2 id="fTitle">Forecast vs actual sales</h2><p>Units per day. Shaded band is the expected range. Dashed line is next week.</p></div>
+          <select id="fCat" aria-label="Forecast category" style="border:1px solid var(--line2);border-radius:8px;padding:7px 11px;background:var(--surface)"></select></div>
+        <div class="chartwrap"><svg class="chart" id="fChart" viewBox="0 0 760 270" role="img" aria-label="Forecast chart for selected category"></svg></div>
+        <div class="fstats" id="fStats"></div>
+      </div>
+      <div class="grid2">
+        <div class="panel">
+          <div class="ph"><div><h2>Suggested order · next delivery</h2><p>Covers 3 days of forecast demand plus a 10% safety margin, minus stock that will still be sellable.</p></div></div>
+          <div class="tw"><table id="oTable"><thead><tr>
+            <th>Product</th><th class="num">Forecast 7 days</th><th class="num">Per day</th><th class="num">Stock</th><th class="num">Suggested order</th>
+          </tr></thead><tbody></tbody></table></div>
+        </div>
+        <div class="panel" style="display:flex;flex-direction:column;gap:20px">
+          <div><div class="ph"><div><h2>What moves the forecast</h2><p>Signals applied to next week.</p></div></div>
+            <ul class="drivers">
+              <li><span class="pill info">Search</span><p>Gluten-free bread searches up 45%<br><small>Forecast raised, demand not met by current orders</small></p></li>
+              <li><span class="pill warn">Weather</span><p>Rain forecast Thu–Fri<br><small>+6% soups and ready meals, −8% salads</small></p></li>
+              <li><span class="pill mute">Calendar</span><p>School half-term from Mon 26 Oct<br><small>Daytime footfall expected higher from week 44</small></p></li>
+              <li><span class="pill good">Promo</span><p>Strawberries 2 for £4 ends Wed 14 Oct<br><small>Demand drops ~15% after the promo</small></p></li>
+            </ul></div>
+          <div><div class="ph"><div><h2>Accuracy by category</h2><p>Last 7 days.</p></div></div><div class="acc" id="acc"></div></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const fmt = n => Math.round(n).toLocaleString("en-GB");
+const gbp = n => "£" + Math.round(n).toLocaleString("en-GB");
+
+// n name, c category, s searches 7d, sp searches prev week, b units bought 7d, fc forecast next 7d, st stock, d days of shelf life left, kg per unit, pr price
+const P = [
+ {n:"Bananas",c:"Fruit & veg",s:12480,sp:10570,b:10960,fc:11500,st:3100,d:4,kg:.18,pr:.20},
+ {n:"Oat milk 1L",c:"Dairy & alternatives",s:9320,sp:7060,b:6990,fc:7300,st:2600,d:30,kg:1.03,pr:1.80},
+ {n:"Greek yoghurt 500g",c:"Dairy & alternatives",s:7920,sp:6390,b:5700,fc:5900,st:1900,d:12,kg:.5,pr:2.10},
+ {n:"Gluten-free bread",c:"Bakery",s:6540,sp:4510,b:2350,fc:4200,st:180,d:5,kg:.4,pr:2.75,oos:3},
+ {n:"Strawberries 400g",c:"Fruit & veg",s:5780,sp:5160,b:4970,fc:5100,st:2350,d:3,kg:.4,pr:2.50},
+ {n:"Free-range eggs ×6",c:"Dairy & alternatives",s:5210,sp:4820,b:4690,fc:4800,st:1700,d:18,kg:.36,pr:2.30},
+ {n:"Avocado, ripe",c:"Fruit & veg",s:4890,sp:4410,b:2640,fc:3900,st:900,d:3,kg:.2,pr:.85,note:"Shoppers search ripe; stock arrives hard"},
+ {n:"Sourdough loaf",c:"Bakery",s:4320,sp:4050,b:3720,fc:3800,st:760,d:2,kg:.8,pr:2.60},
+ {n:"Chicken breast 500g",c:"Meat & fish",s:3980,sp:3750,b:3540,fc:3600,st:1450,d:4,kg:.5,pr:4.20},
+ {n:"Baby spinach 200g",c:"Fruit & veg",s:3780,sp:3470,b:2910,fc:3000,st:1150,d:2,kg:.2,pr:1.40},
+ {n:"Fresh salad mix 250g",c:"Fruit & veg",s:2950,sp:3120,b:2240,fc:2100,st:760,d:2,kg:.25,pr:1.20},
+ {n:"Salmon fillets ×2",c:"Meat & fish",s:2610,sp:2380,b:2190,fc:2250,st:700,d:3,kg:.24,pr:4.50},
+ {n:"Hummus 200g",c:"Chilled",s:2380,sp:2090,b:2060,fc:2100,st:1250,d:9,kg:.2,pr:1.30},
+ {n:"Greek yoghurt ×4 multi-pack",c:"Dairy & alternatives",s:1840,sp:1880,b:1620,fc:1500,st:1450,d:6,kg:.5,pr:2.40}
+];
+P.forEach(p=>{
+  p.conv = p.b/p.s; p.tr = p.s/p.sp-1; p.daily = p.fc/7;
+  p.cover = p.st/p.daily;
+  p.sellable = Math.min(p.st, p.daily*Math.min(p.d,7));
+  p.surplus = Math.max(0, p.st - p.sellable);
+  p.sig = p.conv<.5 ? "gap" : p.conv<.7 ? "watch" : "ok";
+});
+const CATS = [...new Set(P.map(p=>p.c))];
+
+// Actions derived from the data
+const ACTS = [];
+P.forEach(p=>{
+  if (p.surplus > p.st*.05 && p.d<=3){
+    const disc = p.d<=2 ? 30 : 20;
+    ACTS.push({id:p.n,t:"markdown",lvl:"crit",p,urg:1+p.d,
+      k:`Mark down · expires in ${p.d} day${p.d>1?"s":""}`,
+      txt:`${fmt(p.st)} in stock, ${fmt(p.sellable)} forecast to sell before expiry.`,
+      tags:[`${disc}% off ${fmt(p.surplus)} units now`,`Next order −${fmt(p.surplus)}`],
+      kg:p.surplus*p.kg, rec:p.surplus*.7*p.pr*(1-disc/100)});
+  } else if (p.surplus>0){
+    ACTS.push({id:p.n,t:"reduce",lvl:"warn",p,urg:5,
+      k:"Reduce next order · overstock",
+      txt:`${fmt(p.st)} in stock vs ${fmt(p.sellable)} sellable in the ${p.d} days before expiry.`,
+      tags:[`Next order −${fmt(p.surplus)}`],kg:p.surplus*p.kg,rec:0});
+  }
+  if (p.cover<1.5){
+    const q = Math.round(p.daily*3 - p.st);
+    const lost = Math.max(0,(p.fc - p.b))*p.pr;
+    ACTS.push({id:p.n+"-r",t:"restock",lvl:"good",p,urg:p.oos?0:3,
+      k:p.oos?`Restock · empty shelf ${p.oos} of 7 days`:"Restock · low cover",
+      txt:`${fmt(p.st)} in stock = ${p.cover.toFixed(1)} days of demand. ${p.oos?`Searches up ${Math.round(p.tr*100)}%, only ${Math.round(p.conv*100)}% bought.`:""}`,
+      tags:[`Order +${fmt(q)} units`, lost>50?`≈ ${gbp(lost)} / week sales at risk`:`Cover 3 days`],kg:0,rec:0,lost});
+  }
+});
+ACTS.sort((a,b)=>a.urg-b.urg);
+
+let applied = {}; try{applied = JSON.parse(localStorage.getItem("ss-applied")||"{}")}catch(e){}
+const save = ()=>{try{localStorage.setItem("ss-applied",JSON.stringify(applied))}catch(e){}};
+const BASE_WASTE = 186; // kg avoided last week before today's actions
+
+// Daily series per category
+const W = [.12,.13,.13,.14,.16,.18,.14];
+const NA = [.02,-.03,.01,.03,-.02,.01,-.02];
+const NE = [.03,-.05,.02,.04,-.03,.02,-.04];
+const ERRF = {"Fruit & veg":1,"Bakery":2.2,"Dairy & alternatives":.7,"Meat & fish":1.1,"Chilled":1.3};
+function series(cat){
+  const cats = cat==="All fresh" ? CATS : [cat];
+  const act=Array(7).fill(0), pred=Array(7).fill(0), fut=Array(7).fill(0);
+  cats.forEach(c=>{
+    const ps=P.filter(p=>p.c===c), b=ps.reduce((a,p)=>a+p.b,0), f=ps.reduce((a,p)=>a+p.fc,0);
+    W.forEach((w,i)=>{const a=b*w*(1+NA[i]); act[i]+=a; pred[i]+=a*(1+NE[i]*ERRF[c]); fut[i]+=f*w;});
+  });
+  const mape = act.reduce((s,a,i)=>s+Math.abs(pred[i]-a)/a,0)/7;
+  return {act,pred,fut,mape};
+}
+
+function drawChart(svg,cat,H){
+  const {act,pred,fut,mape}=series(cat);
+  const days=["Mon 5","Tue 6","Wed 7","Thu 8","Fri 9","Sat 10","Sun 11","Mon 12","Tue 13","Wed 14","Thu 15","Fri 16","Sat 17","Sun 18"];
+  const Wd=760,L=54,R=16,T=18,B=32;
+  const top=Math.max(...act,...pred,...fut)*(1+mape*1.6);
+  const step=[100,200,250,500,1000,2000,2500,5000][[100,200,250,500,1000,2000,2500,5000].findIndex(s=>top/s<=5)]||5000;
+  const yMax=Math.ceil(top/step)*step;
+  const x=i=>L+i*(Wd-L-R)/13, y=v=>T+(1-v/yMax)*(H-T-B);
+  const line=(a,o=0)=>a.map((v,i)=>`${x(i+o).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+  const bw=Math.max(mape*1.6,.03);
+  let s=`<rect class="futbg" x="${x(6.5)}" y="${T}" width="${Wd-R-x(6.5)}" height="${H-T-B}" rx="6"/>`;
+  for(let v=0;v<=yMax;v+=step) s+=`<line class="gl" x1="${L}" x2="${Wd-R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L-8}" y="${y(v)+4}" text-anchor="end">${fmt(v)}</text>`;
+  days.forEach((d,i)=>s+=`<text x="${x(i)}" y="${H-10}" text-anchor="middle">${d}</text>`);
+  const all=[...pred,...fut];
+  s+=`<polygon class="band" points="${all.map((v,i)=>`${x(i)},${y(v*(1+bw))}`).join(" ")} ${all.map((v,i)=>`${x(i)},${y(v*(1-bw))}`).reverse().join(" ")}"/>`;
+  s+=`<line class="today" x1="${x(6.5)}" x2="${x(6.5)}" y1="${T}" y2="${H-B}"/><text class="todayt" x="${x(6.5)+8}" y="${T+14}">Today · next 7 days</text>`;
+  s+=`<polyline class="pred" points="${line(pred)}"/><polyline class="fut" points="${x(6)},${y(pred[6])} ${line(fut,7)}"/><polyline class="actl" points="${line(act)}"/>`;
+  pred.forEach((v,i)=>s+=`<circle class="pp" cx="${x(i)}" cy="${y(v)}" r="3.5"><title>${days[i]} · forecast ${fmt(v)}</title></circle>`);
+  act.forEach((v,i)=>s+=`<circle class="pa" cx="${x(i)}" cy="${y(v)}" r="3.5"><title>${days[i]} · sold ${fmt(v)}</title></circle>`);
+  fut.forEach((v,i)=>s+=`<circle class="pp" cx="${x(i+7)}" cy="${y(v)}" r="3"><title>${days[i+7]} · forecast ${fmt(v)}</title></circle>`);
+  svg.innerHTML=s;
+  return {act,pred,fut,mape};
+}
+
+// Shared renderers
+function sbRows(list){
+  const max=Math.max(...list.map(p=>p.s));
+  return list.map(p=>`<div class="sbr"><div class="name">${p.n}<small>${p.c}</small></div>
+    <div class="bars" title="${fmt(p.s)} searches · ${fmt(p.b)} bought"><div class="bar s" style="width:${p.s/max*100}%"></div><div class="bar p" style="width:${p.b/max*100}%"></div></div>
+    <div class="conv"><b>${Math.round(p.conv*100)}%</b>${sigPill(p)}</div></div>`).join("");
+}
+function sigPill(p){return p.sig==="gap"?`<span class="pill crit">Unmet demand</span>`:p.sig==="watch"?`<span class="pill warn">Watch</span>`:`<span class="pill good">On track</span>`}
+function stockPill(p){return p.cover<1.5?`<span class="pill crit">Low · ${p.cover.toFixed(1)} d</span>`:p.surplus>0?`<span class="pill warn">Too much · ${p.cover.toFixed(1)} d</span>`:`<span class="pill mute">OK · ${p.cover.toFixed(1)} d</span>`}
+function actCard(a){
+  const done=!!applied[a.id];
+  return `<div class="act ${a.lvl}${done?" done":""}"><span class="stripe"></span><div>
+    <span class="k">${a.k}</span><h3>${a.p.n}</h3><p>${a.txt}</p>
+    <div class="impact">${a.tags.map(t=>`<span>${t}</span>`).join("")}${a.kg?`<span>≈ ${fmt(a.kg)} kg waste avoided</span>`:""}${a.rec?`<span>≈ ${gbp(a.rec)} recovered</span>`:""}</div></div>
+    <div class="btns"><button type="button" class="btn primary" data-apply="${a.id}" aria-pressed="${done}">${done?"Applied ✓":"Apply"}</button></div></div>`;
+}
+
+// OVERVIEW
+function renderOverview(){
+  const tb=P.reduce((a,p)=>a+p.b,0), ts=P.reduce((a,p)=>a+p.s,0);
+  document.getElementById("kConv").textContent=Math.round(tb/ts*100)+"%";
+  const savedNow=ACTS.filter(a=>applied[a.id]).reduce((s,a)=>s+a.kg,0);
+  document.getElementById("kWaste").textContent=fmt(BASE_WASTE+savedNow)+" kg";
+  document.getElementById("kWasteSub").innerHTML=savedNow?`incl. <span class="up">${fmt(savedNow)} kg</span> from today's actions`:`<span class="up">↑ 32%</span> · ≈ 362 kg CO₂e`;
+  document.getElementById("ovSb").innerHTML=sbRows([...P].sort((a,b)=>b.s-a.s).slice(0,5));
+  const open=ACTS.filter(a=>!applied[a.id]);
+  document.getElementById("ovActs").innerHTML=(open.length?open.slice(0,3):ACTS.slice(0,3)).map(actCard).join("");
+  const r=drawChart(document.getElementById("ovChart"),"All fresh",250);
+  document.getElementById("kAcc").textContent=Math.round((1-r.mape)*100)+"%";
+  const n=open.length, c=document.getElementById("navCount"); c.textContent=n; c.hidden=!n;
+}
+
+// SEARCHES
+let sortK="s", sortDir=-1, sig="all";
+const catSel=document.getElementById("cat");
+catSel.innerHTML=`<option value="">All categories</option>`+CATS.map(c=>`<option>${c}</option>`).join("");
+function renderSearches(){
+  const tb=P.reduce((a,p)=>a+p.b,0), ts=P.reduce((a,p)=>a+p.s,0);
+  document.getElementById("sConv").textContent=Math.round(tb/ts*100)+"%";
+  const q=document.getElementById("q").value.trim().toLowerCase(), c=catSel.value;
+  let rows=P.filter(p=>(!q||p.n.toLowerCase().includes(q))&&(!c||p.c===c)&&(sig==="all"||p.sig==="gap"));
+  rows.sort((a,b)=>(typeof a[sortK]==="string"?a[sortK].localeCompare(b[sortK]):a[sortK]-b[sortK])*sortDir);
+  document.querySelector("#sTable tbody").innerHTML=rows.length?rows.map(p=>`<tr>
+    <td><b>${p.n}</b><span class="sub">${p.c}${p.note?" · "+p.note:""}</span></td>
+    <td class="num">${fmt(p.s)}</td><td class="num">${fmt(p.b)}</td>
+    <td class="num">${Math.round(p.conv*100)}%<span class="mini"><i style="width:${p.conv*100}%"></i></span></td>
+    <td class="num ${p.tr>=0?"up":"down"}">${p.tr>=0?"↑":"↓"} ${Math.abs(Math.round(p.tr*100))}%</td>
+    <td>${stockPill(p)}</td><td>${sigPill(p)}</td></tr>`).join(""):`<tr><td colspan="7" class="empty">No product matches this filter.</td></tr>`;
+  document.querySelectorAll("#sTable th button").forEach(b=>{ if(b.dataset.k===sortK) b.dataset.dir=sortDir<0?"desc":"asc"; else delete b.dataset.dir; });
+}
+document.querySelectorAll("#sTable th button").forEach(b=>b.addEventListener("click",()=>{
+  if(sortK===b.dataset.k) sortDir*=-1; else {sortK=b.dataset.k; sortDir=b.dataset.k==="n"?1:-1;}
+  renderSearches();
+}));
+document.getElementById("q").addEventListener("input",renderSearches);
+catSel.addEventListener("change",renderSearches);
+document.querySelectorAll("[data-sig]").forEach(b=>b.addEventListener("click",()=>{
+  sig=b.dataset.sig; document.querySelectorAll("[data-sig]").forEach(x=>x.setAttribute("aria-pressed",x===b)); renderSearches();
+}));
+const NORES=[["Kombucha",1240,"Drinks"],["Oat cream",860,"Dairy & alternatives"],["Vegan feta",720,"Chilled"],["Smoked tofu",610,"Chilled"],["Gluten-free wraps",540,"Bakery"],["Matcha powder",410,"Grocery"]];
+document.getElementById("noRes").innerHTML=NORES.map(([n,v,c])=>`<div class="li"><div><b>${n}</b><br><small style="color:var(--muted)">${c}</small></div><span class="n">${fmt(v)} searches</span><span class="pill info">Add to range?</span></div>`).join("");
+const HR=[2.1,3.4,4.6,5.8,7.9,8.6,6.4,5.9,6.8,9.2,11.4,10.6,7.3,4.0], hs=HR.reduce((a,b)=>a+b,0), hmax=Math.max(...HR);
+document.getElementById("hours").innerHTML=HR.map((v,i)=>{const per=96800/7*v/hs;return `<div title="${8+i}:00 · ${fmt(per)} searches"><span class="b${v===hmax?" pk":""}" style="height:${v/hmax*100}%"></span><small>${8+i}h</small></div>`}).join("");
+
+// ACTIONS
+let aType="all";
+function renderActions(){
+  const open=ACTS.filter(a=>!applied[a.id]);
+  document.getElementById("aOpen").textContent=open.length;
+  const cnt=t=>open.filter(a=>a.t===t).length;
+  document.getElementById("aOpenSub").textContent=`${cnt("markdown")} mark down · ${cnt("reduce")} reduce · ${cnt("restock")} restock`;
+  document.getElementById("aRisk").textContent=fmt(ACTS.reduce((s,a)=>s+a.kg,0))+" kg";
+  const saved=ACTS.filter(a=>applied[a.id]);
+  document.getElementById("aSaved").textContent=fmt(saved.reduce((s,a)=>s+a.kg,0))+" kg";
+  document.getElementById("aSavedSub").textContent=saved.length?`${saved.length} action${saved.length>1?"s":""} applied · ≈ ${gbp(saved.reduce((s,a)=>s+a.rec,0))} recovered`:"Apply an action to see its effect";
+  document.getElementById("aLost").textContent=gbp(ACTS.filter(a=>a.t==="restock"&&!applied[a.id]).reduce((s,a)=>s+(a.lost||0),0));
+  const list=ACTS.filter(a=>aType==="all"||a.t===aType);
+  document.getElementById("allActs").innerHTML=list.length?list.map(actCard).join(""):`<p class="empty">No action of this type this week.</p>`;
+  const wl=P.filter(p=>p.d<=4).sort((a,b)=>a.d-b.d);
+  document.querySelector("#wTable tbody").innerHTML=wl.map(p=>`<tr><td><b>${p.n}</b><span class="sub">${p.c}</span></td>
+    <td class="num">${fmt(p.st)}</td><td class="num">${p.d} day${p.d>1?"s":""}</td><td class="num">${fmt(p.sellable)}</td>
+    <td class="num">${p.surplus?fmt(p.surplus)+" · "+fmt(p.surplus*p.kg)+" kg":"0"}</td>
+    <td>${p.surplus?(p.d<=2?`<span class="pill crit">Act today</span>`:`<span class="pill warn">Act tomorrow</span>`):`<span class="pill good">Will sell through</span>`}</td></tr>`).join("");
+}
+document.querySelectorAll("[data-t]").forEach(b=>b.addEventListener("click",()=>{
+  aType=b.dataset.t; document.querySelectorAll("[data-t]").forEach(x=>x.setAttribute("aria-pressed",x===b)); renderActions();
+}));
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-apply]"); if(!b) return;
+  const id=b.dataset.apply; if(applied[id]) delete applied[id]; else applied[id]=1;
+  save(); renderOverview(); renderActions();
+});
+
+// FORECAST
+const fSel=document.getElementById("fCat");
+fSel.innerHTML=["All fresh",...CATS].map(c=>`<option>${c}</option>`).join("");
+function renderForecast(){
+  const c=fSel.value;
+  document.getElementById("fTitle").textContent=`Forecast vs actual sales · ${c}`;
+  const r=drawChart(document.getElementById("fChart"),c,270);
+  const sa=r.act.reduce((a,b)=>a+b,0), sp=r.pred.reduce((a,b)=>a+b,0), sf=r.fut.reduce((a,b)=>a+b,0);
+  document.getElementById("fStats").innerHTML=`<span>Sold last week <b>${fmt(sa)} units</b></span><span>Forecast last week <b>${fmt(sp)}</b></span><span>Accuracy <b>${Math.round((1-r.mape)*100)}%</b></span><span>Forecast next week <b>${fmt(sf)}</b> <span class="${sf>=sa?"up":"down"}">${sf>=sa?"↑":"↓"} ${Math.abs(Math.round((sf/sa-1)*100))}%</span></span>`;
+  const ps=P.filter(p=>c==="All fresh"||p.c===c).sort((a,b)=>b.fc-a.fc);
+  document.querySelector("#oTable tbody").innerHTML=ps.map(p=>{
+    const o=Math.max(0,Math.round(p.daily*3*1.1 - Math.min(p.st,p.sellable)));
+    return `<tr><td><b>${p.n}</b><span class="sub">${p.c}</span></td><td class="num">${fmt(p.fc)}</td><td class="num">${fmt(p.daily)}</td><td class="num">${fmt(p.st)}</td>
+    <td class="num">${o?`<b>${fmt(o)}</b>`:`<span class="pill mute">Skip</span>`}</td></tr>`}).join("");
+}
+fSel.addEventListener("change",renderForecast);
+document.getElementById("acc").innerHTML=CATS.map(c=>{const a=1-series(c).mape;return `<div><span>${c}</span><span class="tr"><i style="width:${a*100}%"></i></span><span>${Math.round(a*100)}%</span></div>`}).join("");
+
+// Routing
+const VIEWS=["overview","searches","actions","forecast"];
+function route(){
+  const v=VIEWS.includes(location.hash.slice(1))?location.hash.slice(1):"overview";
+  VIEWS.forEach(x=>document.getElementById("v-"+x).hidden=x!==v);
+  document.querySelectorAll(".nav a").forEach(a=>a.dataset.v===v?a.setAttribute("aria-current","page"):a.removeAttribute("aria-current"));
+  window.scrollTo(0,0);
+}
+window.addEventListener("hashchange",route);
+renderOverview(); renderSearches(); renderActions(); renderForecast(); route();
+</script>
+</body>
+</html>
